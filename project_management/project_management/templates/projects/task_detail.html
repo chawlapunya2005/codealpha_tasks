@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}{{ task.title }} — TaskFlow{% endblock %}
+{% block extra_css %}
+<style>
+.task-container { max-width:800px; margin:2rem auto; padding:0 1.5rem; }
+.back-link { color:var(--muted); text-decoration:none; font-size:0.875rem; display:inline-flex; align-items:center; gap:0.4rem; margin-bottom:1.5rem; }
+.back-link:hover { color:var(--accent); }
+.task-header { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:2rem; margin-bottom:1.5rem; }
+.task-header h1 { font-size:1.5rem; font-weight:700; margin-bottom:1rem; }
+.task-meta-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-top:1rem; }
+.meta-item label { font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:0.3rem; }
+.meta-item span { font-size:0.9rem; font-weight:500; }
+.task-desc { color:var(--muted); line-height:1.7; margin:1rem 0; }
+.status-form { display:flex; gap:0.5rem; margin-top:1.2rem; flex-wrap:wrap; }
+.comments-section { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.5rem; }
+.comments-section h2 { font-size:1rem; font-weight:600; margin-bottom:1.2rem; }
+.comment { display:flex; gap:0.8rem; margin-bottom:1.2rem; }
+.comment-avatar { width:36px; height:36px; background:var(--accent2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:700; flex-shrink:0; }
+.comment-body { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:0.8rem 1rem; }
+.comment-author { font-size:0.8rem; font-weight:600; margin-bottom:0.3rem; }
+.comment-time { font-size:0.75rem; color:var(--muted); margin-left:0.5rem; font-weight:400; }
+.comment-text { font-size:0.875rem; line-height:1.6; color:var(--muted); }
+.add-comment { margin-top:1.5rem; }
+.add-comment textarea { width:100%; background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:0.8rem 1rem; border-radius:10px; font-family:'Inter',sans-serif; font-size:0.875rem; height:90px; resize:none; }
+.add-comment textarea:focus { outline:none; border-color:var(--accent); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="task-container">
+    <a href="/projects/{{ task.project.pk }}/" class="back-link"><i class="fas fa-arrow-left"></i> Back to {{ task.project.name }}</a>
+    <div class="task-header">
+        <h1>{{ task.title }}</h1>
+        {% if task.description %}<p class="task-desc">{{ task.description }}</p>{% endif %}
+        <div class="task-meta-grid">
+            <div class="meta-item"><label>Status</label><span class="badge badge-{{ task.status }}">{{ task.get_status_display }}</span></div>
+            <div class="meta-item"><label>Priority</label><span class="badge badge-{{ task.priority }}">{{ task.get_priority_display }}</span></div>
+            <div class="meta-item"><label>Assigned To</label><span>{% if task.assigned_to %}{{ task.assigned_to.username }}{% else %}Unassigned{% endif %}</span></div>
+            <div class="meta-item"><label>Due Date</label><span>{% if task.due_date %}{{ task.due_date }}{% else %}No deadline{% endif %}</span></div>
+            <div class="meta-item"><label>Project</label><span>{{ task.project.name }}</span></div>
+            <div class="meta-item"><label>Created By</label><span>{{ task.created_by.username }}</span></div>
+        </div>
+        <div class="status-form">
+            <span style="font-size:0.85rem;color:var(--muted);align-self:center;">Move to:</span>
+            {% if task.status != 'todo' %}<form method="post" action="/tasks/{{ task.pk }}/status/">{% csrf_token %}<input type="hidden" name="status" value="todo"><button class="btn btn-outline btn-sm" type="submit">To Do</button></form>{% endif %}
+            {% if task.status != 'inprogress' %}<form method="post" action="/tasks/{{ task.pk }}/status/">{% csrf_token %}<input type="hidden" name="status" value="inprogress"><button class="btn btn-outline btn-sm" type="submit">In Progress</button></form>{% endif %}
+            {% if task.status != 'done' %}<form method="post" action="/tasks/{{ task.pk }}/status/">{% csrf_token %}<input type="hidden" name="status" value="done"><button class="btn btn-primary btn-sm" type="submit">✓ Mark Done</button></form>{% endif %}
+            <form method="post" action="/tasks/{{ task.pk }}/delete/" style="margin-left:auto">{% csrf_token %}<button class="btn btn-danger btn-sm" type="submit" onclick="return confirm('Delete this task?')"><i class="fas fa-trash"></i></button></form>
+        </div>
+    </div>
+    <div class="comments-section">
+        <h2><i class="fas fa-comments" style="color:var(--accent)"></i> Comments ({{ comments.count }})</h2>
+        {% for comment in comments %}
+        <div class="comment">
+            <div class="comment-avatar">{{ comment.author.username|first|upper }}</div>
+            <div class="comment-body">
+                <div class="comment-author">{{ comment.author.username }}<span class="comment-time">{{ comment.created|timesince }} ago</span></div>
+                <div class="comment-text">{{ comment.content }}</div>
+            </div>
+        </div>
+        {% empty %}
+        <div style="text-align:center;padding:2rem;color:var(--muted);font-size:0.875rem;"><i class="fas fa-comment-slash" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.3;"></i>No comments yet. Be the first!</div>
+        {% endfor %}
+        <div class="add-comment">
+            <form method="post">
+                {% csrf_token %}
+                <textarea name="content" placeholder="Write a comment..."></textarea>
+                <button type="submit" class="btn btn-primary" style="margin-top:0.6rem"><i class="fas fa-paper-plane"></i> Post Comment</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

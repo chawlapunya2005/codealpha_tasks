@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}New Project — TaskFlow{% endblock %}
+{% block extra_css %}
+<style>
+.form-container { max-width:550px; margin:3rem auto; padding:0 1.5rem; }
+.form-box { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:2.5rem; }
+.form-box h1 { font-size:1.5rem; font-weight:700; margin-bottom:0.4rem; }
+.form-box p { color:var(--muted); font-size:0.875rem; margin-bottom:2rem; }
+.form-group { margin-bottom:1.2rem; }
+.form-group label { display:block; font-size:0.85rem; font-weight:500; color:var(--muted); margin-bottom:0.4rem; }
+.form-group input, .form-group textarea { width:100%; background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; border-radius:8px; font-family:'Inter',sans-serif; font-size:0.9rem; }
+.form-group input:focus, .form-group textarea:focus { outline:none; border-color:var(--accent); }
+.form-group textarea { height:100px; resize:none; }
+.color-row { display:flex; gap:0.6rem; flex-wrap:wrap; }
+.color-opt { width:32px; height:32px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:border-color 0.2s; }
+.color-opt:hover, .color-opt.selected { border-color:#fff; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="form-container">
+    <div class="form-box">
+        <h1>Create New Project</h1>
+        <p>Set up a new project board for your team.</p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Project Name *</label>
+                <input type="text" name="name" placeholder="e.g. Website Redesign" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" placeholder="What is this project about?"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Project Color</label>
+                <div class="color-row">
+                    <div class="color-opt selected" style="background:#58a6ff" onclick="document.getElementById('colorInput').value='#58a6ff';document.querySelectorAll('.color-opt').forEach(e=>e.classList.remove('selected'));this.classList.add('selected')"></div>
+                    <div class="color-opt" style="background:#3fb950" onclick="document.getElementById('colorInput').value='#3fb950';document.querySelectorAll('.color-opt').forEach(e=>e.classList.remove('selected'));this.classList.add('selected')"></div>
+                    <div class="color-opt" style="background:#d29922" onclick="document.getElementById('colorInput').value='#d29922';document.querySelectorAll('.color-opt').forEach(e=>e.classList.remove('selected'));this.classList.add('selected')"></div>
+                    <div class="color-opt" style="background:#f85149" onclick="document.getElementById('colorInput').value='#f85149';document.querySelectorAll('.color-opt').forEach(e=>e.classList.remove('selected'));this.classList.add('selected')"></div>
+                    <div class="color-opt" style="background:#bc8cff" onclick="document.getElementById('colorInput').value='#bc8cff';document.querySelectorAll('.color-opt').forEach(e=>e.classList.remove('selected'));this.classList.add('selected')"></div>
+                    <div class="color-opt" style="background:#ffa657" onclick="document.getElementById('colorInput').value='#ffa657';document.querySelectorAll('.color-opt').forEach(e=>e.classList.remove('selected'));this.classList.add('selected')"></div>
+                </div>
+                <input type="hidden" name="color" id="colorInput" value="#58a6ff">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;padding:0.8rem;font-size:1rem;margin-top:0.5rem;justify-content:center;">
+                <i class="fas fa-rocket"></i> Create Project
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

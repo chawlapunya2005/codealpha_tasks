@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.name }} — TaskFlow{% endblock %}
+{% block extra_css %}
+<style>
+.project-header { background:var(--surface); border-bottom:1px solid var(--border); padding:1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.project-header-left { display:flex; align-items:center; gap:1rem; }
+.project-dot { width:16px; height:16px; border-radius:50%; flex-shrink:0; }
+.project-header h1 { font-size:1.3rem; font-weight:700; }
+.project-header p { color:var(--muted); font-size:0.85rem; margin-top:0.2rem; }
+.board { display:grid; grid-template-columns:repeat(3,1fr); gap:1.2rem; padding:1.5rem; max-width:1300px; margin:0 auto; }
+.column { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+.column-header { padding:1rem 1.2rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.column-title { font-size:0.875rem; font-weight:600; display:flex; align-items:center; gap:0.5rem; }
+.col-dot { width:8px; height:8px; border-radius:50%; }
+.col-count { background:var(--surface2); padding:0.15rem 0.5rem; border-radius:10px; font-size:0.75rem; color:var(--muted); }
+.tasks-list { padding:0.8rem; display:flex; flex-direction:column; gap:0.6rem; min-height:200px; }
+.task-card { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:1rem; transition:all 0.2s; }
+.task-card:hover { border-color:var(--accent); }
+.task-card-title { font-size:0.875rem; font-weight:600; margin-bottom:0.5rem; }
+.task-card a { color:var(--text); text-decoration:none; }
+.task-card a:hover { color:var(--accent); }
+.task-card-meta { display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; margin-top:0.6rem; }
+.task-assignee { font-size:0.75rem; color:var(--muted); margin-left:auto; }
+.task-actions { display:flex; gap:0.3rem; margin-top:0.6rem; }
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center; }
+.modal-overlay.active { display:flex; }
+.modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:2rem; width:90%; max-width:500px; }
+.modal h2 { font-size:1.2rem; margin-bottom:1.5rem; }
+.form-group { margin-bottom:1rem; }
+.form-group label { display:block; font-size:0.8rem; color:var(--muted); margin-bottom:0.3rem; }
+.form-group input, .form-group textarea, .form-group select { width:100%; background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:0.6rem 0.9rem; border-radius:8px; font-family:'Inter',sans-serif; font-size:0.875rem; }
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus { outline:none; border-color:var(--accent); }
+.form-group textarea { height:80px; resize:none; }
+.modal-actions { display:flex; gap:0.5rem; margin-top:1.2rem; }
+.members-section { padding:1rem 1.5rem; }
+.member-chips { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem; }
+.member-chip { display:flex; align-items:center; gap:0.4rem; background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:0.3rem 0.8rem; font-size:0.8rem; }
+.chip-avatar { width:20px; height:20px; background:var(--accent2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:700; }
+@media(max-width:800px){.board{grid-template-columns:1fr;}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="project-header">
+    <div class="project-header-left">
+        <div class="project-dot" style="background:{{ project.color }}"></div>
+        <div>
+            <h1>{{ project.name }}</h1>
+            {% if project.description %}<p>{{ project.description }}</p>{% endif %}
+        </div>
+    </div>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('addTaskModal').classList.add('active')"><i class="fas fa-plus"></i> Add Task</button>
+        {% if user == project.owner %}
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('addMemberModal').classList.add('active')"><i class="fas fa-user-plus"></i> Add Member</button>
+        <a href="/projects/{{ project.pk }}/delete/" class="btn btn-danger btn-sm" onclick="return confirm('Delete this project?')"><i class="fas fa-trash"></i></a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="members-section" style="background:var(--surface);border-bottom:1px solid var(--border);">
+    <div style="display:flex;align-items:center;gap:1rem;max-width:1300px;margin:0 auto;">
+        <span style="font-size:0.8rem;color:var(--muted);">MEMBERS</span>
+        <div class="member-chips">
+            <div class="member-chip"><div class="chip-avatar" style="background:var(--warning)">{{ project.owner.username|first|upper }}</div>{{ project.owner.username }} <span style="color:var(--warning);font-size:0.7rem;">owner</span></div>
+            {% for member in project.members.all %}
+            <div class="member-chip"><div class="chip-avatar">{{ member.username|first|upper }}</div>{{ member.username }}</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="board">
+    <div class="column">
+        <div class="column-header">
+            <div class="column-title"><div class="col-dot" style="background:var(--todo)"></div>To Do</div>
+            <span class="col-count">{{ todo_tasks.count }}</span>
+        </div>
+        <div class="tasks-list">
+            {% for task in todo_tasks %}
+            <div class="task-card">
+                <div class="task-card-title"><a href="/tasks/{{ task.pk }}/">{{ task.title }}</a></div>
+                {% if task.description %}<div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.3rem;">{{ task.description|truncatechars:60 }}</div>{% endif %}
+                <div class="task-card-meta">
+                    <span class="badge badge-{{ task.priority }}">{{ task.get_priority_display }}</span>
+                    {% if task.due_date %}<span style="font-size:0.75rem;color:var(--muted)"><i class="fas fa-calendar-alt"></i> {{ task.due_date }}</span>{% endif %}
+                    {% if task.assigned_to %}<span class="task-assignee"><i class="fas fa-user"></i> {{ task.assigned_to.username }}</span>{% endif %}
+                </div>
+                <div class="task-actions">
+                    <form method="post" action="/tasks/{{ task.pk }}/status/" style="flex:1">{% csrf_token %}<input type="hidden" name="status" value="inprogress"><button type="submit" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;">Move to In Progress →</button></form>
+                </div>
+            </div>
+            {% empty %}<div style="text-align:center;padding:2rem;color:var(--muted);font-size:0.85rem;">No tasks yet</div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="column">
+        <div class="column-header">
+            <div class="column-title"><div class="col-dot" style="background:var(--warning)"></div>In Progress</div>
+            <span class="col-count">{{ inprogress_tasks.count }}</span>
+        </div>
+        <div class="tasks-list">
+            {% for task in inprogress_tasks %}
+            <div class="task-card">
+                <div class="task-card-title"><a href="/tasks/{{ task.pk }}/">{{ task.title }}</a></div>
+                {% if task.description %}<div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.3rem;">{{ task.description|truncatechars:60 }}</div>{% endif %}
+                <div class="task-card-meta">
+                    <span class="badge badge-{{ task.priority }}">{{ task.get_priority_display }}</span>
+                    {% if task.assigned_to %}<span class="task-assignee"><i class="fas fa-user"></i> {{ task.assigned_to.username }}</span>{% endif %}
+                </div>
+                <div class="task-actions">
+                    <form method="post" action="/tasks/{{ task.pk }}/status/" style="flex:1">{% csrf_token %}<input type="hidden" name="status" value="todo"><button type="submit" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;">← Back</button></form>
+                    <form method="post" action="/tasks/{{ task.pk }}/status/" style="flex:1">{% csrf_token %}<input type="hidden" name="status" value="done"><button type="submit" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">Done ✓</button></form>
+                </div>
+            </div>
+            {% empty %}<div style="text-align:center;padding:2rem;color:var(--muted);font-size:0.85rem;">No tasks in progress</div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="column">
+        <div class="column-header">
+            <div class="column-title"><div class="col-dot" style="background:var(--success)"></div>Done</div>
+            <span class="col-count">{{ done_tasks.count }}</span>
+        </div>
+        <div class="tasks-list">
+            {% for task in done_tasks %}
+            <div class="task-card" style="opacity:0.7">
+                <div class="task-card-title" style="text-decoration:line-through"><a href="/tasks/{{ task.pk }}/" style="color:var(--muted)">{{ task.title }}</a></div>
+                <div class="task-card-meta">
+                    <span class="badge badge-done">Completed</span>
+                    {% if task.assigned_to %}<span class="task-assignee"><i class="fas fa-user"></i> {{ task.assigned_to.username }}</span>{% endif %}
+                </div>
+                <div class="task-actions">
+                    <form method="post" action="/tasks/{{ task.pk }}/status/">{% csrf_token %}<input type="hidden" name="status" value="todo"><button type="submit" class="btn btn-outline btn-sm">Reopen</button></form>
+                    <form method="post" action="/tasks/{{ task.pk }}/delete/">{% csrf_token %}<button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete task?')"><i class="fas fa-trash"></i></button></form>
+                </div>
+            </div>
+            {% empty %}<div style="text-align:center;padding:2rem;color:var(--muted);font-size:0.85rem;">No completed tasks</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Task Modal -->
+<div class="modal-overlay" id="addTaskModal" onclick="if(event.target===this)this.classList.remove('active')">
+    <div class="modal">
+        <h2><i class="fas fa-plus-circle" style="color:var(--accent)"></i> Add New Task</h2>
+        <form method="post" action="/projects/{{ project.pk }}/tasks/create/">
+            {% csrf_token %}
+            <div class="form-group"><label>Task Title *</label><input type="text" name="title" placeholder="What needs to be done?" required></div>
+            <div class="form-group"><label>Description</label><textarea name="description" placeholder="More details..."></textarea></div>
+            <div class="form-group"><label>Priority</label>
+                <select name="priority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select>
+            </div>
+            <div class="form-group"><label>Assign To</label>
+                <select name="assigned_to"><option value="">— Unassigned —</option>
+                {% for u in all_users %}<option value="{{ u.pk }}">{{ u.username }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group"><label>Due Date</label><input type="date" name="due_date"></div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;">Create Task</button>
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('addTaskModal').classList.remove('active')">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Member Modal -->
+<div class="modal-overlay" id="addMemberModal" onclick="if(event.target===this)this.classList.remove('active')">
+    <div class="modal">
+        <h2><i class="fas fa-user-plus" style="color:var(--accent)"></i> Add Team Member</h2>
+        <form method="post" action="/projects/{{ project.pk }}/members/add/">
+            {% csrf_token %}
+            <div class="form-group"><label>Select User</label>
+                <select name="user_id">
+                {% for u in all_users %}<option value="{{ u.pk }}">{{ u.username }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;">Add Member</button>
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('addMemberModal').classList.remove('active')">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

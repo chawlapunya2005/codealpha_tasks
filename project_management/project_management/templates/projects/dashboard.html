@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — TaskFlow{% endblock %}
+{% block extra_css %}
+<style>
+.dashboard { padding:2rem 1.5rem; max-width:1200px; margin:0 auto; }
+.dashboard-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; }
+.dashboard-header h1 { font-size:1.5rem; font-weight:700; }
+.section-title { font-size:0.8rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:1rem; margin-top:2rem; }
+.projects-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1rem; }
+.project-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.5rem; text-decoration:none; color:var(--text); transition:all 0.2s; position:relative; overflow:hidden; }
+.project-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--card-color,var(--accent)); }
+.project-card:hover { border-color:var(--accent); transform:translateY(-2px); }
+.project-card h3 { font-size:1rem; font-weight:600; margin-bottom:0.4rem; }
+.project-card p { color:var(--muted); font-size:0.85rem; margin-bottom:1rem; line-height:1.5; }
+.project-meta { display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; color:var(--muted); }
+.task-count { background:var(--surface2); padding:0.2rem 0.6rem; border-radius:20px; }
+.new-project-card { border:2px dashed var(--border); border-radius:12px; padding:1.5rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; color:var(--muted); text-decoration:none; transition:all 0.2s; font-size:0.9rem; min-height:130px; }
+.new-project-card:hover { border-color:var(--accent); color:var(--accent); }
+.my-tasks { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+.task-row { display:flex; align-items:center; gap:1rem; padding:0.9rem 1.2rem; border-bottom:1px solid var(--border); text-decoration:none; color:var(--text); transition:background 0.2s; }
+.task-row:last-child { border-bottom:none; }
+.task-row:hover { background:var(--surface2); }
+.task-row-title { flex:1; font-size:0.9rem; font-weight:500; }
+.task-row-project { font-size:0.8rem; color:var(--muted); }
+.empty-state { text-align:center; padding:3rem; color:var(--muted); }
+.empty-state i { font-size:2.5rem; display:block; margin-bottom:0.8rem; opacity:0.4; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="dashboard">
+    <div class="dashboard-header">
+        <h1>👋 Welcome, {{ user.username }}!</h1>
+        <a href="/projects/create/" class="btn btn-primary"><i class="fas fa-plus"></i> New Project</a>
+    </div>
+    <div class="section-title">My Tasks</div>
+    {% if my_tasks %}
+    <div class="my-tasks">
+        {% for task in my_tasks %}
+        <a href="/tasks/{{ task.pk }}/" class="task-row">
+            <div class="task-row-title">{{ task.title }}</div>
+            <div class="task-row-project">{{ task.project.name }}</div>
+            <span class="badge badge-{{ task.priority }}">{{ task.get_priority_display }}</span>
+            <span class="badge badge-{{ task.status }}">{{ task.get_status_display }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="my-tasks"><div class="empty-state"><i class="fas fa-check-circle"></i><p>No tasks assigned yet.</p></div></div>
+    {% endif %}
+    <div class="section-title">My Projects</div>
+    <div class="projects-grid">
+        {% for project in owned_projects %}
+        <a href="/projects/{{ project.pk }}/" class="project-card" style="--card-color:{{ project.color }}">
+            <h3>{{ project.name }}</h3>
+            <p>{{ project.description|truncatechars:80 }}</p>
+            <div class="project-meta"><span><i class="fas fa-crown" style="color:var(--warning)"></i> Owner</span><span class="task-count">{{ project.tasks.count }} tasks</span></div>
+        </a>
+        {% endfor %}
+        {% for project in member_projects %}
+        <a href="/projects/{{ project.pk }}/" class="project-card" style="--card-color:{{ project.color }}">
+            <h3>{{ project.name }}</h3>
+            <p>{{ project.description|truncatechars:80 }}</p>
+            <div class="project-meta"><span><i class="fas fa-user"></i> Member</span><span class="task-count">{{ project.tasks.count }} tasks</span></div>
+        </a>
+        {% endfor %}
+        <a href="/projects/create/" class="new-project-card"><i class="fas fa-plus-circle"></i> Create New Project</a>
+    </div>
+</div>
+{% endblock %}
