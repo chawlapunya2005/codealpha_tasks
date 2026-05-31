@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.name }} — ShopAlpha{% endblock %}
+{% block extra_css %}
+<style>
+.product-detail { display:grid; grid-template-columns:1fr 1fr; gap:3rem; padding:3rem 2rem; max-width:1000px; margin:0 auto; }
+.product-detail-img { background:var(--surface); border:1px solid var(--border); border-radius:16px; height:400px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:5rem; overflow:hidden; }
+.product-detail-img img { width:100%; height:100%; object-fit:cover; }
+.product-detail-info h1 { font-family:'Playfair Display',serif; font-size:2rem; margin-bottom:0.5rem; }
+.product-detail-cat { color:var(--muted); font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:1rem; }
+.product-detail-price { font-size:2rem; color:var(--accent); font-weight:700; margin-bottom:1.5rem; }
+.product-detail-desc { color:var(--muted); line-height:1.7; margin-bottom:2rem; }
+.stock-badge { display:inline-block; padding:0.3rem 0.8rem; background:rgba(82,192,122,0.15); border:1px solid var(--success); color:var(--success); border-radius:20px; font-size:0.8rem; margin-bottom:1.5rem; }
+@media(max-width:700px){.product-detail{grid-template-columns:1fr;}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="product-detail">
+    <div class="product-detail-img">
+        {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">
+        {% else %}<i class="fas fa-box"></i>{% endif %}
+    </div>
+    <div class="product-detail-info">
+        <div class="product-detail-cat">{{ product.category.name }}</div>
+        <h1>{{ product.name }}</h1>
+        <div class="product-detail-price">&#8377;{{ product.price }}</div>
+        {% if product.stock > 0 %}<div class="stock-badge"><i class="fas fa-check"></i> In Stock ({{ product.stock }} left)</div>{% endif %}
+        <p class="product-detail-desc">{{ product.description }}</p>
+        <form method="post" action="/cart/add/{{ product.id }}/">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary" style="width:100%;padding:0.8rem;font-size:1rem;">
+                <i class="fas fa-shopping-cart"></i> Add to Cart
+            </button>
+        </form>
+        <a href="/" class="btn btn-outline" style="width:100%;text-align:center;margin-top:0.8rem;display:block;">
+            &larr; Back to Shop
+        </a>
+    </div>
+</div>
+{% endblock %}

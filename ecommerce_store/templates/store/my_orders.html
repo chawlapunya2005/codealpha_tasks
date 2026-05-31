@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}My Orders — ShopAlpha{% endblock %}
+{% block extra_css %}
+<style>
+.orders-container { max-width:900px; margin:2rem auto; padding:0 2rem; }
+.orders-container h1 { font-family:'Playfair Display',serif; font-size:2rem; margin-bottom:2rem; }
+.order-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+.order-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+.order-id { font-weight:700; font-size:1.1rem; }
+.status-badge { padding:0.3rem 0.8rem; border-radius:20px; font-size:0.8rem; font-weight:600; }
+.status-pending { background:rgba(232,197,71,0.15); color:var(--accent); border:1px solid var(--accent); }
+.status-delivered { background:rgba(82,192,122,0.15); color:var(--success); border:1px solid var(--success); }
+.status-processing { background:rgba(82,130,255,0.15); color:#5282ff; border:1px solid #5282ff; }
+.order-items { border-top:1px solid var(--border); padding-top:1rem; margin-top:1rem; }
+.order-item { display:flex; justify-content:space-between; color:var(--muted); font-size:0.9rem; padding:0.3rem 0; }
+.order-total { font-weight:700; color:var(--accent); text-align:right; margin-top:0.8rem; font-size:1.1rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="orders-container">
+    <h1>My Orders</h1>
+    {% if orders %}
+        {% for order in orders %}
+        <div class="order-card">
+            <div class="order-header">
+                <div class="order-id">Order #{{ order.id }}</div>
+                <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
+            </div>
+            <div style="color:var(--muted);font-size:0.85rem;">{{ order.created|date:"d M Y, h:i A" }} &bull; {{ order.address }}</div>
+            <div class="order-items">
+                {% for item in order.items.all %}
+                <div class="order-item">
+                    <span>{{ item.product.name }} &times; {{ item.quantity }}</span>
+                    <span>&#8377;{{ item.get_total }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="order-total">Total: &#8377;{{ order.total_price }}</div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div style="text-align:center;padding:4rem;color:var(--muted);">
+        <i class="fas fa-box-open" style="font-size:3rem;display:block;margin-bottom:1rem;"></i>
+        <p>No orders yet. <a href="/" style="color:var(--accent)">Start shopping!</a></p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

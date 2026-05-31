@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ShopAlpha{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+        :root {
+            --bg: #0f0f0f;
+            --surface: #1a1a1a;
+            --surface2: #242424;
+            --accent: #e8c547;
+            --accent2: #f0a500;
+            --text: #f0ece4;
+            --muted: #888;
+            --border: #2e2e2e;
+            --danger: #e05252;
+            --success: #52c07a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .nav-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--accent);
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: var(--text); }
+
+        .cart-btn {
+            background: var(--accent);
+            color: #000 !important;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-weight: 600 !important;
+        }
+
+        .cart-btn:hover { background: var(--accent2); }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+        .messages { padding: 1rem 2rem 0; }
+        .alert {
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .alert-success { background: rgba(82,192,122,0.15); border: 1px solid var(--success); color: var(--success); }
+        .alert-error { background: rgba(224,82,82,0.15); border: 1px solid var(--danger); color: var(--danger); }
+        .alert-warning { background: rgba(232,197,71,0.15); border: 1px solid var(--accent); color: var(--accent); }
+
+        .btn {
+            display: inline-block;
+            padding: 0.6rem 1.4rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+        .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover { opacity: 0.85; }
+
+        footer {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            text-align: center;
+            padding: 2rem;
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin-top: 4rem;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+<nav>
+    <a href="/" class="nav-brand">ShopAlpha</a>
+    <div class="nav-links">
+        <a href="/">Shop</a>
+        {% if user.is_authenticated %}
+            <a href="/my-orders/">My Orders</a>
+            <a href="/accounts/logout/">Logout ({{ user.username }})</a>
+        {% else %}
+            <a href="/accounts/login/">Login</a>
+            <a href="/accounts/register/">Register</a>
+        {% endif %}
+        <a href="/cart/" class="cart-btn"><i class="fas fa-shopping-cart"></i> Cart ({{ cart_count }})</a>
+    </div>
+</nav>
+
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% block content %}{% endblock %}
+
+
+</body>
+</html>

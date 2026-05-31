@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Order Placed — ShopAlpha{% endblock %}
+{% block content %}
+<div style="text-align:center;padding:5rem 2rem;">
+    <i class="fas fa-check-circle" style="font-size:5rem;color:var(--success);display:block;margin-bottom:1.5rem;"></i>
+    <h1 style="font-family:'Playfair Display',serif;font-size:2.5rem;margin-bottom:1rem;">Order Placed!</h1>
+    <p style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem;">Order #{{ order.id }} has been confirmed.</p>
+    <p style="color:var(--muted);margin-bottom:2rem;">Delivering to: {{ order.address }}</p>
+    <a href="/" class="btn btn-primary" style="margin-right:1rem;">Continue Shopping</a>
+    <a href="/my-orders/" class="btn btn-outline">View My Orders</a>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}ShopAlpha — Home{% endblock %}
+{% block extra_css %}
+<style>
+.hero { background: linear-gradient(135deg,#1a1a1a,#0f0f0f); border-bottom:1px solid var(--border); padding:4rem 2rem; text-align:center; }
+.hero h1 { font-family:'Playfair Display',serif; font-size:3.5rem; color:var(--accent); margin-bottom:1rem; }
+.hero p { color:var(--muted); font-size:1.1rem; }
+.categories { display:flex; gap:0.6rem; flex-wrap:wrap; padding:1.5rem 2rem; }
+.cat-btn { padding:0.4rem 1rem; background:var(--surface2); border:1px solid var(--border); color:var(--muted); border-radius:20px; text-decoration:none; font-size:0.85rem; transition:all 0.2s; }
+.cat-btn:hover,.cat-btn.active { background:var(--accent); color:#000; border-color:var(--accent); }
+.products-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1.5rem; padding:1rem 2rem 3rem; }
+.product-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; transition:transform 0.2s,border-color 0.2s; }
+.product-card:hover { transform:translateY(-4px); border-color:var(--accent); }
+.product-img { width:100%; height:200px; background:var(--surface2); display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:3rem; }
+.product-img img { width:100%; height:200px; object-fit:cover; }
+.product-info { padding:1.2rem; }
+.product-info h3 { font-size:1rem; margin-bottom:0.4rem; font-weight:600; }
+.product-price { font-size:1.2rem; color:var(--accent); font-weight:700; margin:0.5rem 0 1rem; }
+.product-category { font-size:0.75rem; color:var(--muted); margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:1px; }
+.product-actions { display:flex; gap:0.5rem; }
+.no-products { text-align:center; padding:4rem 2rem; color:var(--muted); }
+.no-products i { font-size:3rem; margin-bottom:1rem; display:block; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="hero">
+    <h1>ShopAlpha</h1>
+    <p>Discover premium products at unbeatable prices</p>
+</div>
+<div class="categories">
+    <a href="/" class="cat-btn {% if not request.GET.category %}active{% endif %}">All</a>
+    {% for cat in categories %}
+    <a href="/?category={{ cat.slug }}" class="cat-btn {% if request.GET.category == cat.slug %}active{% endif %}">{{ cat.name }}</a>
+    {% endfor %}
+</div>
+{% if products %}
+<div class="products-grid">
+    {% for product in products %}
+    <div class="product-card">
+        <div class="product-img">
+            {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">
+            {% else %}<i class="fas fa-box"></i>{% endif %}
+        </div>
+        <div class="product-info">
+            <div class="product-category">{{ product.category.name }}</div>
+            <h3>{{ product.name }}</h3>
+            <div class="product-price">&#8377;{{ product.price }}</div>
+            <div class="product-actions">
+                <a href="/product/{{ product.slug }}/" class="btn btn-outline">Details</a>
+                <form method="post" action="/cart/add/{{ product.id }}/" style="flex:1">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary" style="width:100%">Add to Cart</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="no-products">
+    <i class="fas fa-box-open"></i>
+    <p>No products yet. Add some from the <a href="/admin/" style="color:var(--accent)">admin panel</a>.</p>
+</div>
+{% endif %}
+{% endblock %}
